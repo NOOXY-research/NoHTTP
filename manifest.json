@@ -1,0 +1,31 @@
+{
+  "name": "NoHTTP",
+  "version": "0.0.0",
+  "displayname": "NoService http service.",
+  "description": "A noservice service that provides http related services",
+  "Authors": ["NOOXY", "noowyee"],
+  "git_url": "https://github.com/NOOXY-Research/NoServiceManager",
+  "upgrade_branch": "master",
+  "implementation_api": false,
+  "LibraryAPI": true,
+  "DatabaseAPI": true,
+  "dependencies": {
+    "node_packages": {
+      "oauth2-server": "^3.0.1",
+      "express": "^4.16.4"
+    },
+    "services": {}
+  },
+  "JSONfunciton_prototypes": {},
+  "settings": {
+    "port": 8888,
+    "oauth_path": "/oauth",
+    "oauth_route": {
+      "AccessToken": "/access_token",
+      "UserProfile": "/user_profile"
+    },
+    "streaming_path": "/streaming",
+    "content_path": "/content",
+    "backstage_path": "/admin"
+  }
+}
