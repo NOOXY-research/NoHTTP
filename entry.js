@@ -20,16 +20,25 @@ function Service(Me, API) {
   let files_path = Me.FilesPath;
   // Your settings in manifest file.
   let settings = Me.Settings;
-
   // import API to NoHTTP module
-  NoHTTP.importModel(API.Database.Model);
-  NoHTTP.importLibrary(API.Database.Library);
+
+  NoHTTP.importLibrary(API.Library);
   NoHTTP.importSettings(settings);
-  NoHTTP.launch();
+  NoHTTP.importFilesPath(files_path);
+
+  ss.sdef('re', (json, entityID, returnJSON)=> {
+    NoServiceManager.bindAllServiceToRepository((err)=> {
+      returnJSON(false, {s: err?err:'succeess'});
+    });
+  });
 
   // Here is where your service start
   this.start = ()=> {
-    
+    NoHTTP.importModel(API.Database.Model, ()=> {
+      NoHTTP.launch(()=> {
+
+      });
+    });
   }
 
   // If the daemon stop, your service recieve close signal here.

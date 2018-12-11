@@ -12,7 +12,9 @@
   "dependencies": {
     "node_packages": {
       "oauth2-server": "^3.0.1",
-      "express": "^4.16.4"
+      "express": "^4.16.4",
+      "multer": "^0.0.0",
+      "mime": "^0.0.0"
     },
     "services": {}
   },
@@ -21,11 +23,20 @@
     "port": 8888,
     "oauth_path": "/oauth",
     "oauth_route": {
+      "Authoriz.e": "/authorize",
       "AccessToken": "/access_token",
       "UserProfile": "/user_profile"
     },
     "streaming_path": "/streaming",
     "content_path": "/content",
-    "backstage_path": "/admin"
+    "backstage_path": "/admin",
+    "upload_path": "/upload",
+    "costom_api_path": "/api",
+    "file_modelname": "files",
+    "accessTokenName": "accessToken",
+    "uploadccessTokenName": "uploadToken",
+    "MaxUploadSizeMb": 32,
+    "UploadTimeoutSec": 120,
+    "DownloadTimeoutSec": 1200
   }
 }

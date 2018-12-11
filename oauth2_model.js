@@ -18,6 +18,19 @@ function Oauth2Model() {
   /*
    * Get access token.
    */
+   this.createClient = function(bearerToken) {
+     return pg.query('SELECT access_token, access_token_expires_on, client_id, refresh_token, refresh_token_expires_on, user_id FROM oauth_tokens WHERE access_token = $1', [bearerToken])
+       .then(function(result) {
+         var token = result.rows[0];
+
+         return {
+           accessToken: token.access_token,
+           client: {id: token.client_id},
+           expires: token.expires,
+           user: {id: token.userId}, // could be any object
+         };
+       });
+   };
 
   this.getAccessToken = function(bearerToken) {
     return pg.query('SELECT access_token, access_token_expires_on, client_id, refresh_token, refresh_token_expires_on, user_id FROM oauth_tokens WHERE access_token = $1', [bearerToken])
