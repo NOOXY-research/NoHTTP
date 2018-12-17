@@ -23,12 +23,19 @@ let http = Express();
 'use strict';
 
 function NoHTTP() {
-  let _on_handler = {};
+  let _on_handler = {
+    "fileuploaded": null
+  };
   let _oauth;
   let _http_server;
   let _queue_file_upload_request = {};
   let _file_model;
-  let _upload_tokens = ['test'];
+  let _upload_tokens = {
+    "test": {
+      onUploaded: null,
+      fileId: null
+    }
+  };
 
   // import model from API in entry.js
   this.importModel = (model)=> {
@@ -65,16 +72,18 @@ function NoHTTP() {
       }
       else if(!has_model) {
         Model.define(Settings.file_modelname, {
-          model_type: "Object",
+          model_type: "Pair",
           do_timestamp: true,
-          model_key: "fileid",
+          model_key: ["fileid", "urlpath"],
           structure: {
             fileid: "VARCHAR(255)",
+            urlpath: "TEXT",
             originalname: "VARCHAR(255)",
             mimetype: "VARCHAR(255)",
             destination: "VARCHAR(255)",
-            path: "VARCHAR(255)",
-            size: "INTEGER"
+            filepath: "VARCHAR(255)",
+            size: "INTEGER",
+            urls: "TEXT"
           }
         }, (err, model)=> {
           _file_model = model;
@@ -95,36 +104,45 @@ function NoHTTP() {
 
   };
 
+  // upload base url will be like www.baseurl.com/upload/
+  // upload url will be like www.baseurl.com/upload/token
+  this.getUploadURLPrefix = ()=> {
+
+  };
+
   // request file upload and return fileId
-  // urltype:
-  // dynamic, static
-  // filetype:
-  // file, streaming file
-  // uploadToken
-  this.requestFileUploadURL = (urltype, filetype, callback)=> {
+  this.requestFileUpload = (token, callback)=> {
 
   };
 
   // get file url by fileId accessToken
-  this.getFileURL = (fileId, callback)=> {
+  // urltype:
+  // dynamic, static, streaming
+  this.createFileURL = (fileId, urltype, callback)=> {
 
-  }
+  };
+
+  this.removeAllFileURLs = (fileId, callback)=> {
+
+  };
+
+  this.getFileURLs = (fileId, callback)=> {
+
+  };
 
   // get file url by fileId accessToken
   this.getFilePath = (fileId, callback)=> {
 
-  }
+  };
 
   // remove file url by fileId, callback file ip
   this.removeFile = (fileId, callback)=> {
 
   };
 
-
   this.importFile = (filepath, callback)=> {
 
   };
-
 
   this.registerURL = (html_filepath, callback)=> {
 
@@ -134,10 +152,11 @@ function NoHTTP() {
 
   };
 
+
   // define you own funciton to be called in entry.js
   this.launch = ()=> {
     try {
-      fs.mkdirSync(FilesPath+'/files/');
+      fs.mkdirSync('files/');
     }
     catch (err) {
     } // Skip
@@ -145,13 +164,14 @@ function NoHTTP() {
     upload = Multer({storage: Multer.diskStorage({
       destination: FilesPath+'/files', // this saves your file into a directory called "uploads"
       filename: (req, file, cb) =>{
+        console.log(req.params.uploadToken);
         let fileid = Utils.generateGUID();
         _file_model.create({
           fileid: fileid,
           originalname: file.originalname,
           mimetype: file.mimetype,
           destination: FilesPath+'/files/',
-          path: FilesPath+'/files/'+fileid,
+          filepath: FilesPath+'/files/'+fileid,
           size: file.size
         }, ()=> {
           cb(null, fileid);
@@ -165,21 +185,21 @@ function NoHTTP() {
       model: oauth_model
     });
 
-    http.all(Settings.upload_path+'/:uploadToken', (req, res, next)=> {
+    http.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
       console.log(req.params.uploadToken);
+      console.log('uploaded');
       let index = _upload_tokens.indexOf(req.params.uploadToken);
       if (index > -1) {
         _upload_tokens.splice(index, 1);
-        next();
+        res.sendStatus(200);
       }
       else {
         res.sendStatus(404);
       }
     });
 
-    http.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
-      console.log('uploaded');
-      res.sendStatus(200);
+    http.get(Settings.content_path+'/:accessToken', (req, res)=> {
+
     });
 
     http.all(Settings.oauth_path+Settings.oauth_route.AccessToken, ()=> {
@@ -198,7 +218,7 @@ function NoHTTP() {
   // on event register
   this.on = (event, callback)=> {
     _on_handler[event] = callback;
-  }
+  };
 
   this.close = ()=> {
     _http_server.close();

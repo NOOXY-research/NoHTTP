@@ -20,17 +20,21 @@
   },
   "JSONfunciton_prototypes": {},
   "settings": {
-    "port": 8888,
+    "listen": 8888,
     "oauth_path": "/oauth",
     "oauth_route": {
       "Authoriz.e": "/authorize",
       "AccessToken": "/access_token",
       "UserProfile": "/user_profile"
     },
+
+    "domaian_name": "services.company.com",
+
     "streaming_path": "/streaming",
     "content_path": "/content",
     "backstage_path": "/admin",
     "upload_path": "/upload",
+    "upload_timeout_min": "20",
     "costom_api_path": "/api",
     "file_modelname": "files",
     "accessTokenName": "accessToken",
