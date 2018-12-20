@@ -110,6 +110,10 @@ function NoHTTP() {
 
   };
 
+  this.getBaseURL = ()=> {
+
+  };
+
   // request file upload and return fileId
   this.requestFileUpload = (token, callback)=> {
 
@@ -126,12 +130,12 @@ function NoHTTP() {
 
   };
 
-  this.getFileURLs = (fileId, callback)=> {
+  this.getFileURLsbyFileId = (fileId, callback)=> {
 
   };
 
   // get file url by fileId accessToken
-  this.getFilePath = (fileId, callback)=> {
+  this.getFilePathbyFileId = (fileId, callback)=> {
 
   };
 
