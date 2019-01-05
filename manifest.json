@@ -34,6 +34,7 @@
     "content_path": "/content",
     "backstage_path": "/admin",
     "upload_path": "/upload",
+    "upload_form_key": "file",
     "upload_timeout_min": "20",
     "costom_api_path": "/api",
     "file_modelname": "files",

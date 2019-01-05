@@ -1,7 +1,7 @@
 // NoService/services/NoHTTP/entry.js
 // Description:
 // "NoHTTP/entry.js" description.
-// Copyright 2018 NOOXY. All Rights Reserved.
+// Copyright 2018-2019 NOOXY. All Rights Reserved.
 'use strict';
 
 
@@ -23,15 +23,30 @@ function Service(Me, NoService) {
   // import NoService to NoHTTP module
 
 
-  ss.sdef('re', (json, entityID, returnJSON)=> {
-    NoServiceManager.bindAllServiceToRepository((err)=> {
-      returnJSON(false, {s: err?err:'succeess'});
+  NoHTTP.on('fileuploaded', (err, uploadToken, fileid)=> {
+    ss.emitToGroups([uploadToken], 'fileuploaded', {fileid: fileid});
+  });
+
+  ss.sdef('requestFileUpload', (json, entityID, returnJSON)=> {
+    NoHTTP.requestFileUpload(json, (err, uploadToken, uploadURL, uploadFormKey)=> {
+      NoService.Service.Entity.addEntityToGroups(entityID, [uploadToken], ()=> {
+        console.log({uploadurl: uploadURL});
+        returnJSON(false, {uploadurl: uploadURL, formkey: uploadFormKey});
+      });
     });
   });
 
   // Here is where your service start
   this.start = ()=> {
     NoHTTP.launch(()=> {
+      NoService.Service.ActivitySocket.createDefaultAdminDeamonSocket('NoHTTP', (err, activitysocket)=> {
+        activitysocket.onEvent('fileuploaded', (err, json)=> {
+          console.log(json);
+        });
+        activitysocket.call('requestFileUpload', {}, (err, json)=> {
+            console.log('request', json);
+        });
+      });
 
     });
   }

@@ -95,8 +95,10 @@ function NoHTTP(Me, NoService) {
   };
 
   // request file upload and return fileId
-  this.requestFileUpload = (token, callback)=> {
-
+  this.requestFileUpload = (meta, callback)=> {
+    let uploadtoken = Utils.generateGUID();
+    _upload_tokens[uploadtoken]= {mimetypes:meta.mimetypes, onetimeurl:meta.onetimeurl};
+    callback(false, uploadtoken, Settings.domaian_name+':'+Settings.listen+Settings.upload_path+'/'+uploadtoken, Settings.upload_form_key);
   };
 
   // get file url by fileId accessToken
@@ -138,7 +140,7 @@ function NoHTTP(Me, NoService) {
 
 
   // define you own funciton to be called in entry.js
-  this.launch = ()=> {
+  this.launch = (callback)=> {
     _loadModel(()=> {
       try {
         fs.mkdirSync('files/');
@@ -146,7 +148,18 @@ function NoHTTP(Me, NoService) {
       catch (err) {
       } // Skip
       let oauth_model = new (require('./oauth2_model.js'));
-      upload = Multer({storage: Multer.diskStorage({
+      upload = Multer({
+      fileFilter:(req, file, cb) => {
+        if(_upload_tokens[req.params.uploadToken]) {
+          delete _upload_tokens[req.params.uploadToken];
+          return cb(null, true);
+        }
+        else {
+          req.ValidationError = true;
+          return cb(null, false);
+        }
+      },
+      storage: Multer.diskStorage({
         destination: FilesPath+'/files', // this saves your file into a directory called "uploads"
         filename: (req, file, cb) =>{
           console.log(req.params.uploadToken);
@@ -159,10 +172,11 @@ function NoHTTP(Me, NoService) {
             filepath: FilesPath+'/files/'+fileid,
             size: file.size
           }, ()=> {
+            _on_handler['fileuploaded'](false, req.params.uploadToken, fileid);
             cb(null, fileid);
           });
         }
-      })}).single('file');
+      })}).single(Settings.upload_form_key);
 
       oauth_model.importModel(Model);
       oauth_model.importAuthe();
@@ -171,16 +185,14 @@ function NoHTTP(Me, NoService) {
       });
 
       http.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
-        console.log(req.params.uploadToken);
-        console.log('uploaded');
-        let index = _upload_tokens.indexOf(req.params.uploadToken);
-        if (index > -1) {
-          _upload_tokens.splice(index, 1);
-          res.sendStatus(200);
-        }
-        else {
-          res.sendStatus(404);
-        }
+          if(req.ValidationError) {
+            res.sendStatus(404);
+          }
+          else {
+            console.log(req.params.uploadToken);
+            console.log('uploaded');
+            res.sendStatus(200);
+          }
       });
 
       http.get(Settings.content_path+'/:accessToken', (req, res)=> {
@@ -198,6 +210,8 @@ function NoHTTP(Me, NoService) {
       _http_server = http.listen(Settings.port, (err)=> {
         console.log('NoHTTP listening on port ' + Settings.port + '!');
       });
+
+      callback(false);
     });
   };
 
