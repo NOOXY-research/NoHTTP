@@ -9,6 +9,7 @@ let Settings;
 let FilesPath;
 let Authe;
 let Utils;
+let NoServiceAPI;
 
 const Express = require('express');
 // oauth here is authorization provider!
@@ -22,7 +23,13 @@ let http = Express();
 
 'use strict';
 
-function NoHTTP() {
+function NoHTTP(Me, NoService) {
+  Library = NoService.Library;
+  Utils = NoService.Library.Utilities;
+  Model = NoService.Database.Model;
+  Settings = Me.Settings;
+  FilesPath = Me.FilesPath;
+
   let _on_handler = {
     "fileuploaded": null
   };
@@ -37,35 +44,8 @@ function NoHTTP() {
     }
   };
 
-  // import model from API in entry.js
-  this.importModel = (model)=> {
-    Model = model;
-  };
-
-  // import library from API in entry.js
-  this.importLibrary = (library)=> {
-    Library = library;
-    Utils = library.Utilities;
-  };
-
-  // import settings from API in entry.js
-  this.importSettings = (settings)=> {
-    Settings = settings;
-  };
-
-  // import FilesPath from API in entry.js
-  this.importFilesPath = (path)=> {
-    FilesPath = path;
-  };
-
-  // import utils
-  this.importUtils = (utils)=> {
-    Utils = utils;
-  };
-
   // import database from specified path
-  this.importModel = (model, callback)=> {
-    Model = model;
+  let _loadModel = (callback)=> {
     Model.exist(Settings.file_modelname, (err, has_model)=> {
       if(err) {
         callback(err);
@@ -159,63 +139,65 @@ function NoHTTP() {
 
   // define you own funciton to be called in entry.js
   this.launch = ()=> {
-    try {
-      fs.mkdirSync('files/');
-    }
-    catch (err) {
-    } // Skip
-    let oauth_model = new (require('./oauth2_model.js'));
-    upload = Multer({storage: Multer.diskStorage({
-      destination: FilesPath+'/files', // this saves your file into a directory called "uploads"
-      filename: (req, file, cb) =>{
+    _loadModel(()=> {
+      try {
+        fs.mkdirSync('files/');
+      }
+      catch (err) {
+      } // Skip
+      let oauth_model = new (require('./oauth2_model.js'));
+      upload = Multer({storage: Multer.diskStorage({
+        destination: FilesPath+'/files', // this saves your file into a directory called "uploads"
+        filename: (req, file, cb) =>{
+          console.log(req.params.uploadToken);
+          let fileid = Utils.generateGUID();
+          _file_model.create({
+            fileid: fileid,
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            destination: FilesPath+'/files/',
+            filepath: FilesPath+'/files/'+fileid,
+            size: file.size
+          }, ()=> {
+            cb(null, fileid);
+          });
+        }
+      })}).single('file');
+
+      oauth_model.importModel(Model);
+      oauth_model.importAuthe();
+      _oauth = new OauthServer({
+        model: oauth_model
+      });
+
+      http.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
         console.log(req.params.uploadToken);
-        let fileid = Utils.generateGUID();
-        _file_model.create({
-          fileid: fileid,
-          originalname: file.originalname,
-          mimetype: file.mimetype,
-          destination: FilesPath+'/files/',
-          filepath: FilesPath+'/files/'+fileid,
-          size: file.size
-        }, ()=> {
-          cb(null, fileid);
-        });
-      }
-    })}).single('file');
+        console.log('uploaded');
+        let index = _upload_tokens.indexOf(req.params.uploadToken);
+        if (index > -1) {
+          _upload_tokens.splice(index, 1);
+          res.sendStatus(200);
+        }
+        else {
+          res.sendStatus(404);
+        }
+      });
 
-    oauth_model.importModel(Model);
-    oauth_model.importAuthe();
-    _oauth = new OauthServer({
-      model: oauth_model
-    });
+      http.get(Settings.content_path+'/:accessToken', (req, res)=> {
 
-    http.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
-      console.log(req.params.uploadToken);
-      console.log('uploaded');
-      let index = _upload_tokens.indexOf(req.params.uploadToken);
-      if (index > -1) {
-        _upload_tokens.splice(index, 1);
-        res.sendStatus(200);
-      }
-      else {
-        res.sendStatus(404);
-      }
-    });
+      });
 
-    http.get(Settings.content_path+'/:accessToken', (req, res)=> {
+      http.all(Settings.oauth_path+Settings.oauth_route.AccessToken, ()=> {
 
-    });
+      });
 
-    http.all(Settings.oauth_path+Settings.oauth_route.AccessToken, ()=> {
+      http.all(Settings.oauth_path+Settings.oauth_route.UserProfile, ()=> {
 
-    });
+      });
 
-    http.all(Settings.oauth_path+Settings.oauth_route.UserProfile, ()=> {
-
-    });
-
-    _http_server = http.listen(Settings.port, (err)=> {
-      console.log('NoHTTP listening on port ' + Settings.port + '!');
+      _http_server = http.listen(Settings.port, (err)=> {
+        console.log('NoHTTP listening on port ' + Settings.port + '!');
+      });
     });
   };
 
