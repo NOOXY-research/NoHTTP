@@ -11,6 +11,7 @@ let Authe;
 let Utils;
 let NoServiceAPI;
 
+const HTTP = require('http');
 const Express = require('express');
 // oauth here is authorization provider!
 const OauthServer = require('oauth2-server');
@@ -19,7 +20,7 @@ const Response = OauthServer.Response;
 const Multer = require('multer');
 const fs = require('fs');
 
-let http = Express();
+let app = Express();
 
 'use strict';
 
@@ -184,7 +185,7 @@ function NoHTTP(Me, NoService) {
         model: oauth_model
       });
 
-      http.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
+      app.all(Settings.upload_path+'/:uploadToken', upload, (req, res)=> {
           if(req.ValidationError) {
             res.sendStatus(404);
           }
@@ -195,23 +196,30 @@ function NoHTTP(Me, NoService) {
           }
       });
 
-      http.get(Settings.content_path+'/:accessToken', (req, res)=> {
+      app.get(Settings.content_path+'/:accessToken', (req, res)=> {
 
       });
 
-      http.all(Settings.oauth_path+Settings.oauth_route.AccessToken, ()=> {
+      app.all(Settings.oauth_path+Settings.oauth_route.AccessToken, ()=> {
 
       });
 
-      http.all(Settings.oauth_path+Settings.oauth_route.UserProfile, ()=> {
+      app.all(Settings.oauth_path+Settings.oauth_route.UserProfile, ()=> {
 
       });
 
-      _http_server = http.listen(Settings.port, (err)=> {
-        console.log('NoHTTP listening on port ' + Settings.port + '!');
+      _http_server = HTTP.createServer(app);
+      _http_server.listen(Settings.listen, (err)=> {
+        console.log('NoHTTP listening on port ' + Settings.listen + '!');
+        if(err) {
+          console.log('NoHTTP occured error during launching.');
+          console.log(err);
+        }
+        callback(err);
       });
 
-      callback(false);
+      _http_server.on('err', console.log);
+
     });
   };
 
