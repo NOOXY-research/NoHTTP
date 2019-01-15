@@ -167,14 +167,15 @@ function NoHTTP(Me, NoService) {
           let fileid = Utils.generateGUID();
           _file_model.create({
             fileid: fileid,
+            urlpath: null,
             originalname: file.originalname,
             mimetype: file.mimetype,
             destination: FilesPath+'/files/',
             filepath: FilesPath+'/files/'+fileid,
             size: file.size
-          }, ()=> {
-            _on_handler['fileuploaded'](false, req.params.uploadToken, fileid);
-            cb(null, fileid);
+          }, (err)=> {
+            _on_handler['fileuploaded'](err, req.params.uploadToken, err?null:fileid);
+            cb(err, fileid);
           });
         }
       })}).single(Settings.upload_form_key);

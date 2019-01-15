@@ -24,7 +24,7 @@ function Service(Me, NoService) {
 
 
   NoHTTP.on('fileuploaded', (err, uploadToken, fileid)=> {
-    ss.emitToGroups([uploadToken], 'fileuploaded', {fileid: fileid});
+    ss.emitToGroups([uploadToken], 'fileuploaded', {err: err, fileid: fileid});
   });
 
   ss.sdef('requestFileUpload', (json, entityID, returnJSON)=> {
